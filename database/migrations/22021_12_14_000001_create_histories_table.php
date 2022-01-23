@@ -15,7 +15,9 @@ class CreateHistoriesTable extends Migration
     {
         Schema::create('histories', function (Blueprint $table) {
             $table->id();
+            $table->string("name", 45);
             $table->timestamps();
+            $table->boolean("public");
             $table->unsignedBigInteger('creator_id');
 
             $table->foreign('creator_id')->references('id')->on('users');

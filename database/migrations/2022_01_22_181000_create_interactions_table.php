@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateHistoriesAnswersTable extends Migration
+class CreateInteractionsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,16 +13,16 @@ class CreateHistoriesAnswersTable extends Migration
      */
     public function up()
     {
-        Schema::create('histories_answers', function (Blueprint $table) {
+        Schema::create('interactions', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('history_id');
             $table->unsignedBigInteger('image_id');
-            $table->unsignedBigInteger('user_id');
-            $table->timestamps();
 
+            $table->timestamps();
             $table->foreign('history_id')->references('id')->on('histories');
-            $table->foreign('image_id')->references('id')->on('images');
             $table->foreign('user_id')->references('id')->on('users');
+            $table->foreign('image_id')->references('id')->on('images');
         });
     }
 
@@ -33,6 +33,6 @@ class CreateHistoriesAnswersTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('histories_answers');
+        Schema::dropIfExists('interactions');
     }
 }
