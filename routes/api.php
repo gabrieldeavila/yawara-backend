@@ -1,6 +1,9 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\HistoriesController;
+use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\TagsController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -12,8 +15,38 @@ use Illuminate\Support\Facades\Route;
 | routes are loaded by the RouteServiceProvider within a group which
 | is assigned the "api" middleware group. Enjoy building your API!
 |
-*/
+ */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::post('register', [RegisterController::class, 'register']);
+Route::post('login', [RegisterController::class, 'login']);
+Route::post('admin-login', [RegisterController::class, 'adminLogin']);
+
+Route::post('forgot-password', [RegisterController::class, 'forgotPassword']);
+Route::post('update-password', [RegisterController::class, 'updatePassword']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    // Route::resource('teste', [UserController::class, 'index']);
+    Route::middleware('admin')->group(function () {
+        Route::get('admin/tags', [TagsController::class, 'index']);
+        Route::post('admin/tags', [TagsController::class, 'store']);
+        Route::delete('admin/tags', [TagsController::class, 'destroy']);
+        Route::post('admin/tags/edit', [TagsController::class, 'update']);
+    });
+
+    Route::get('isLogged', function () {
+        return response()->json([
+            'success' => Auth::user(),
+        ]);
+    });
+
+    Route::middleware('user')->group(function () {
+        Route::post('finish-registration', [RegisterController::class, 'finishRegistration']);
+        Route::get('hasFinished', [RegisterController::class, 'hasFinished']);
+        Route::get('tags', [TagsController::class, 'index']);
+        Route::get('profile', [UserController::class, 'show']);
+        Route::post('profile', [UserController::class, 'update']);
+        Route::post('my-histories', [HistoriesController::class, 'index']);
+        Route::post('new-history', [HistoriesController::class, 'store']);
+    });
+
 });
