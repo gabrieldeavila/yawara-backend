@@ -47,6 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('profile', [UserController::class, 'update']);
         Route::post('my-histories', [HistoriesController::class, 'index']);
         Route::post('new-history', [HistoriesController::class, 'store']);
+        Route::post('explore', [HistoriesController::class, 'explore']);
     });
 
 });

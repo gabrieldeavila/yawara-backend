@@ -6,6 +6,8 @@ use App\Models\History;
 use App\Models\HistoryAnswers;
 use App\Models\HistoryTag;
 use App\Models\Image;
+use App\Models\User;
+use App\Models\UserTag;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,7 +27,6 @@ class HistoriesController extends Controller
 
         foreach ($histories as $history) {
             $history->time_ago = Carbon::parse($history->created_at)->diffForHumans();
-            // $history->image = Image::find($history->history->image_id);
         }
         if ($request->page > count($histories)) {
             return response()->json(['message' => 'No more histories'], 200);
@@ -99,6 +100,41 @@ class HistoriesController extends Controller
     public function show(History $history)
     {
         //
+    }
+
+    /**
+     * Show the histories with base in the tags of a user
+     *
+     * @param  \App\Models\History  $history
+     * @return \Illuminate\Http\Response
+     */
+    public function explore(Request $request)
+    {
+        $user = Auth::user();
+        $user_tags = UserTag::where('user_id', $user->id)->take($request->page)->get();
+
+        if ($request->page > count($user_tags)) {
+            return response()->json(['message' => 'No more histories'], 200);
+        }
+
+        $histories = [];
+
+        foreach ($user_tags as $user_tag) {
+            $history = HistoryTag::where('tag_id', $user_tag->tag_id)->get();
+
+            foreach ($history as $h) {
+                if (History::find($h->history_id)) {
+                    $histories[] = HistoryAnswers::where('history_id', $h->history_id)->join('histories', 'histories_answers.history_id', '=', 'histories.id')->join('users', 'histories_answers.user_id', '=', 'users.id')->join('images', 'histories_answers.image_id', '=', 'images.id')->select('users.nickname', 'histories_answers.created_at', 'histories_answers.id', "histories.name", 'images.path')->first();
+                }
+            }
+        }
+
+        foreach ($histories as $history) {
+            $history->time_ago = Carbon::parse($history->created_at)->diffForHumans();
+        }
+        return response()->json([
+            'success' => $histories,
+        ]);
     }
 
     /**
