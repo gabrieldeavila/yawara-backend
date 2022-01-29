@@ -15,14 +15,15 @@ class CreateInteractionsTable extends Migration
     {
         Schema::create('interactions', function (Blueprint $table) {
             $table->id();
+            $table->string('interaction', 255);
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('history_id');
             $table->unsignedBigInteger('image_id');
 
-            $table->timestamps();
             $table->foreign('history_id')->references('id')->on('histories');
             $table->foreign('user_id')->references('id')->on('users');
             $table->foreign('image_id')->references('id')->on('images');
+            $table->timestamps();
         });
     }
 

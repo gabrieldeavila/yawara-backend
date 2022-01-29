@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 class UserFactory extends Factory
 {
@@ -14,13 +13,19 @@ class UserFactory extends Factory
      */
     public function definition()
     {
+        // return [
+        //     'nickname' => "admin",
+        //     'email' => "administrador@yawara.com",
+        //     'email_verified_at' => now(),
+        //     'password' => bcrypt('senhasupersecreta'), // password
+        //     'admin' => 1,
+        //     'remember_token' => Str::random(10),
+        // ];
         return [
-            'nickname' => "admin",
-            'email' => "administrador@yawara.com",
-            'email_verified_at' => now(),
-            'password' => bcrypt('senhasupersecreta'), // password
-            'admin' => 1,
-            'remember_token' => Str::random(10),
+            'nickname' => $this->faker->name(),
+            'email' => $this->faker->email(),
+            'image_id' => $this->faker->numberBetween(1, 6),
+            'password' => $this->faker->password(),
         ];
     }
 

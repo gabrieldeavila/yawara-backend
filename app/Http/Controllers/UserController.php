@@ -23,13 +23,21 @@ class UserController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
      *
+     * Search for users with the given nickname
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function search(Request $request)
     {
-        //
+        $users = User::where('nickname', 'like', '%' . $request->search . '%')->join('images', 'users.image_id', '=', 'images.id')->take($request->page)->select('users.id', 'users.nickname', 'images.path')->get();
+
+        $moreHistories = false;
+        if ($request->page > count($users)) {
+            $moreHistories = true;
+        }
+
+        return response()->json(['success' => $users, 'moreHistories' => $moreHistories]);
     }
 
     /**
@@ -72,7 +80,6 @@ class UserController extends Controller
             }
             $returnTags[] = $tag;
         }
-        // get some avatar img from imgur api
 
         if (!$img) {
             $img = null;

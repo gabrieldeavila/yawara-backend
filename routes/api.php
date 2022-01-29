@@ -30,7 +30,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('admin/tags', [TagsController::class, 'index']);
         Route::post('admin/tags', [TagsController::class, 'store']);
         Route::delete('admin/tags', [TagsController::class, 'destroy']);
-        Route::post('admin/tags/edit', [TagsController::class, 'update']);
+        Route::delete('admin/tags', [TagsController::class, 'destroy']);
+        Route::post('admin/search-for', [UserController::class, 'search']);
     });
 
     Route::get('isLogged', function () {

@@ -28,6 +28,7 @@ class HistoriesController extends Controller
         foreach ($histories as $history) {
             $history->time_ago = Carbon::parse($history->created_at)->diffForHumans();
         }
+
         if ($request->page > count($histories)) {
             return response()->json(['message' => 'No more histories'], 200);
         }
