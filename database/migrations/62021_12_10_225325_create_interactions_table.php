@@ -17,10 +17,10 @@ class CreateInteractionsTable extends Migration
             $table->id();
             $table->string('interaction', 255);
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('history_id');
+            $table->unsignedBigInteger('history_answer_id');
             $table->unsignedBigInteger('image_id');
 
-            $table->foreign('history_id')->references('id')->on('histories');
+            $table->foreign('history_answer_id')->references('id')->on('histories_answers');
             $table->foreign('user_id')->references('id')->on('users');
             $table->foreign('image_id')->references('id')->on('images');
             $table->timestamps();

@@ -19,7 +19,7 @@ class UserFactory extends Factory
         //     'email_verified_at' => now(),
         //     'password' => bcrypt('senhasupersecreta'), // password
         //     'admin' => 1,
-        //     'remember_token' => Str::random(10),
+        //     'remember_token' => \Illuminate\Support\Str::random(10),
         // ];
         return [
             'nickname' => $this->faker->name(),

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\HistoriesController;
+use App\Http\Controllers\InteractionsController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\TagsController;
 use App\Http\Controllers\UserController;
@@ -30,7 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('admin/tags', [TagsController::class, 'index']);
         Route::post('admin/tags', [TagsController::class, 'store']);
         Route::delete('admin/tags', [TagsController::class, 'destroy']);
-        Route::delete('admin/tags', [TagsController::class, 'destroy']);
+        Route::post('admin/tags/edit', [TagsController::class, 'update']);
         Route::post('admin/search-for', [UserController::class, 'search']);
     });
 
@@ -49,6 +50,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('my-histories', [HistoriesController::class, 'index']);
         Route::post('new-history', [HistoriesController::class, 'store']);
         Route::post('explore', [HistoriesController::class, 'explore']);
+        Route::get('view/{history}', [HistoriesController::class, 'show']);
+        Route::post('interaction', [InteractionsController::class, 'store']);
+        Route::post('history/answer', [HistoriesController::class, 'add']);
     });
 
 });
