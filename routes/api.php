@@ -46,6 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('hasFinished', [RegisterController::class, 'hasFinished']);
         Route::get('tags', [TagsController::class, 'index']);
         Route::get('profile', [UserController::class, 'show']);
+        Route::post('search-for', [HistoriesController::class, 'search']);
         Route::post('profile', [UserController::class, 'update']);
         Route::post('my-histories', [HistoriesController::class, 'index']);
         Route::post('new-history', [HistoriesController::class, 'store']);

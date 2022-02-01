@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\HistoryTag;
 use App\Models\Tag;
+use App\Models\UserTag;
 use Illuminate\Http\Request;
 
 class TagsController extends Controller
@@ -72,12 +74,16 @@ class TagsController extends Controller
      */
     public function destroy(Request $tags)
     {
-        foreach ($tags->all() as $tag) {
-            $deleteTag = Tag::find($tag);
 
-            $deleteTag->delete();
-        }
+        // foreach ($tags->all() as $tag) {
+        //     $deleteTag = Tag::find($tag);
 
+        //     $deleteTag->delete();
+        // }
+
+        HistoryTag::whereIn('tag_id', $tags->all())->delete();
+        UserTag::whereIn('tag_id', $tags->all())->delete();
+        Tag::whereIn('id', $tags->all())->delete();
         return response()->json([
             'success' => count($tags->all()) . " tag(s) deletada(s) com sucesso",
         ]);

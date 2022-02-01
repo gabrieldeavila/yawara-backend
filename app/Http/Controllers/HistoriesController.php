@@ -7,6 +7,7 @@ use App\Models\HistoryAnswers;
 use App\Models\HistoryTag;
 use App\Models\Image;
 use App\Models\Interaction;
+use App\Models\Tag;
 use App\Models\User;
 use App\Models\UserTag;
 use Carbon\Carbon;
@@ -170,6 +171,52 @@ class HistoriesController extends Controller
     }
 
     /**
+     * Search histories by search term and tags
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
+     */
+
+    public function search(Request $request)
+    {
+        $tags = [];
+
+        foreach ($request->tags as $tag) {
+            if (Tag::find($tag)) {
+                $tags[] = Tag::find($tag);
+            }
+        }
+        $histories = History::where('name', 'LIKE', "%$request->search%")->get();
+        $returnHistories = [];
+
+        if ($request->hasTags) {
+            foreach ($histories as $history) {
+                foreach ($tags as $tag) {
+                    if (HistoryTag::where([['history_id', $history->id], ['tag_id', $tag->id]])->first()) {
+                        $returnHistories[] = $history;
+                        break;
+                    }
+                }
+            }
+        } else {
+            $returnHistories = $histories;
+        }
+
+        $allHistories = [];
+
+        foreach ($returnHistories as $history) {
+            $allHistories[] = HistoryAnswers::where('history_id', $history->id)->join('histories', 'histories_answers.history_id', '=', 'histories.id')->join('users', 'histories_answers.user_id', '=', 'users.id')->join('images', 'histories_answers.image_id', '=', 'images.id')->select('users.nickname', 'histories_answers.created_at', 'histories.id', "histories.name", 'images.path')->first();
+        }
+
+        foreach ($allHistories as $history) {
+            $history->time_ago = Carbon::parse($history->created_at)->diffForHumans();
+        }
+
+        return response()->json([
+            'success' => $allHistories,
+        ]);
+    }
+    /**
      * Show the histories with base in the tags of a user
      *
      * @param  \App\Models\History  $history
@@ -192,6 +239,7 @@ class HistoriesController extends Controller
             foreach ($history as $h) {
                 if (History::find($h->history_id)) {
                     $histories[] = HistoryAnswers::where('history_id', $h->history_id)->join('histories', 'histories_answers.history_id', '=', 'histories.id')->join('users', 'histories_answers.user_id', '=', 'users.id')->join('images', 'histories_answers.image_id', '=', 'images.id')->select('users.nickname', 'histories_answers.created_at', 'histories_answers.id', "histories.name", 'images.path')->first();
+                    break;
                 }
             }
         }
