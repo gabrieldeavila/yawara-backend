@@ -58,7 +58,7 @@ class InteractionsController extends Controller
             $interaction->save();
         }
 
-        $answer = HistoryAnswers::where([['id', $request->history_answer_history_id], ['user_id', $request->creator_id], ['image_id', $request->image_id]])->first();
+        $answer = HistoryAnswers::where([['id', $request->history_answer_id], ['user_id', $request->creator_id], ['image_id', $request->image_id]])->first();
 
         $creator = User::where('id', $request->creator_id)->first();
         $answer->profilePic = $creator->image_id;
@@ -67,9 +67,15 @@ class InteractionsController extends Controller
         $answer->image = Image::where('id', $answer->image_id)->select('path')->first()->path;
 
         $answer->time_ago = Carbon::parse($answer->created_at)->diffForHumans();
-        $answer->profilePic = Image::where('id', $answer->profilePic)->select('path')->first()->path;
+        $answer->profilePic = Image::where('id', $answer->profilePic)->select('path')->first();
 
-        $interactions = Interaction::where([['history_answer_id', $answer->history_id], ['image_id', $answer->image_id]])->get();
+        if (!$answer->profilePic) {
+            $answer->profilePic = null;
+        } else {
+            $answer->profilePic = $answer->profilePic->path;
+        }
+
+        $interactions = Interaction::where([['history_answer_id', $request->history_answer_id], ['image_id', $answer->image_id]])->get();
 
         $likes = 0;
         $dislikes = 0;
@@ -85,7 +91,7 @@ class InteractionsController extends Controller
         $answer->likes = $likes;
         $answer->dislikes = $dislikes;
 
-        $didInteract = Interaction::where([['user_id', Auth::user()->id], ['history_answer_id', $answer->history_id], ['image_id', $answer->image_id]])->first();
+        $didInteract = Interaction::where([['user_id', Auth::user()->id], ['history_answer_id', $request->history_answer_id], ['image_id', $answer->image_id]])->first();
 
         if ($didInteract) {
             $answer->interaction = $didInteract->interaction;

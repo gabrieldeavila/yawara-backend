@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HistoriesAnswersController;
 use App\Http\Controllers\HistoriesController;
 use App\Http\Controllers\InteractionsController;
 use App\Http\Controllers\RegisterController;
@@ -33,6 +34,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('admin/tags', [TagsController::class, 'destroy']);
         Route::post('admin/tags/edit', [TagsController::class, 'update']);
         Route::post('admin/search-for', [UserController::class, 'search']);
+        Route::get('admin/view/{user}', [UserController::class, 'view']);
+        Route::delete('admin/destroy-user/{user}', [UserController::class, 'destroy']);
+        Route::delete('admin/delete-history/{history}', [HistoriesController::class, 'destroy']);
     });
 
     Route::get('isLogged', function () {
@@ -54,6 +58,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('view/{history}', [HistoriesController::class, 'show']);
         Route::post('interaction', [InteractionsController::class, 'store']);
         Route::post('history/answer', [HistoriesController::class, 'add']);
+        Route::post('history/update/{history}', [HistoriesController::class, 'update']);
+        Route::delete('history/{history}', [HistoriesAnswersController::class, 'destroy']);
+        Route::delete('history/remove/{history}', [HistoriesController::class, 'remove']);
+        Route::delete('users/delete/{user}', [UserController::class, 'destroy']);
     });
 
 });

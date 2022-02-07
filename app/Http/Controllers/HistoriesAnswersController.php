@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\HistoryAnswers;
+use App\Models\Interaction;
 use Illuminate\Http\Request;
 
 class HistoriesAnswersController extends Controller
@@ -78,8 +79,14 @@ class HistoriesAnswersController extends Controller
      * @param  \App\Models\HistoryAnswers  $historyAnswers
      * @return \Illuminate\Http\Response
      */
-    public function destroy(HistoryAnswers $historyAnswers)
+    public function destroy(HistoryAnswers $history)
     {
-        //
+        $interactions = Interaction::where('image_id', $history->image_id)->get();
+
+        foreach ($interactions as $interaction) {
+            $interaction->delete();
+        }
+
+        $history->delete();
     }
 }

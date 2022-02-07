@@ -30,12 +30,35 @@ class HistoriesController extends Controller
         foreach ($histories as $history) {
             $history->time_ago = Carbon::parse($history->created_at)->diffForHumans();
 
-            $history->path = HistoryAnswers::where('history_id', $history->id)->join('images', 'histories_answers.image_id', '=', 'images.id')->select('images.path')->first()->path;
+            // main
+            $answer = HistoryAnswers::where('history_id', $history->id)->join('images', 'histories_answers.image_id', '=', 'images.id')->select('images.path', 'histories_answers.id')->first();
+            $history->path = $answer->path;
+
+            // all
+            $answers = HistoryAnswers::where('history_id', $history->id)->get();
+            $likes = 0;
+            $dislikes = 0;
+
+            foreach ($answers as $answer) {
+                $interaction = Interaction::where('history_answer_id', $answer->id)->get();
+                // return an error if there is no interaction
+                foreach ($interaction as $inter) {
+                    if ($inter->interaction) {
+                        $likes++;
+                    } else {
+                        $dislikes++;
+                    }
+                }
+            }
+
+            $history->likes = $likes;
+            $history->dislikes = $dislikes;
         }
 
         if ($request->page > count($histories)) {
             return response()->json(['message' => 'No more histories'], 200);
         }
+
         return response()->json([
             'success' => $histories,
         ]);
@@ -111,7 +134,7 @@ class HistoriesController extends Controller
         }
 
         return response()->json([
-            'success' => $request,
+            'success' => $history,
         ]);
     }
 
@@ -136,9 +159,14 @@ class HistoriesController extends Controller
 
         foreach ($answers as $answer) {
             $answer->time_ago = Carbon::parse($answer->created_at)->diffForHumans();
-            $answer->profilePic = Image::where('id', $answer->profilePic)->select('path')->first()->path;
+            $answer->profilePic = Image::where('id', $answer->profilePic)->first();
+            if (!$answer->profilePic) {
+                $answer->profilePic = null;
+            } else {
+                $answer->profilePic = $answer->profilePic->path;
+            }
 
-            $interactions = Interaction::where([['history_answer_id', $answer->history_id], ['image_id', $answer->image_id]])->get();
+            $interactions = Interaction::where([['history_answer_id', $answer->id], ['image_id', $answer->image_id]])->get();
 
             $likes = 0;
             $dislikes = 0;
@@ -154,7 +182,7 @@ class HistoriesController extends Controller
             $answer->likes = $likes;
             $answer->dislikes = $dislikes;
 
-            $didInteract = Interaction::where([['user_id', Auth::user()->id], ['history_answer_id', $answer->history_id], ['image_id', $answer->image_id]])->first();
+            $didInteract = Interaction::where([['user_id', Auth::user()->id], ['history_answer_id', $answer->id], ['image_id', $answer->image_id]])->first();
 
             if ($didInteract) {
                 $answer->interaction = $didInteract->interaction;
@@ -186,6 +214,7 @@ class HistoriesController extends Controller
                 $tags[] = Tag::find($tag);
             }
         }
+
         $histories = History::where('name', 'LIKE', "%$request->search%")->get();
         $returnHistories = [];
 
@@ -205,7 +234,28 @@ class HistoriesController extends Controller
         $allHistories = [];
 
         foreach ($returnHistories as $history) {
-            $allHistories[] = HistoryAnswers::where('history_id', $history->id)->join('histories', 'histories_answers.history_id', '=', 'histories.id')->join('users', 'histories_answers.user_id', '=', 'users.id')->join('images', 'histories_answers.image_id', '=', 'images.id')->select('users.nickname', 'histories_answers.created_at', 'histories.id', "histories.name", 'images.path')->first();
+            $mainAnswer = HistoryAnswers::where('history_id', $history->id)->join('histories', 'histories_answers.history_id', '=', 'histories.id')->join('users', 'histories_answers.user_id', '=', 'users.id')->join('images', 'histories_answers.image_id', '=', 'images.id')->select('users.nickname', 'histories_answers.created_at', 'histories.id', "histories.name", 'images.path')->first();
+
+            // all interactions for this answer
+            $allAnswers = HistoryAnswers::where('history_id', $history->id)->get();
+            $likes = 0;
+            $dislikes = 0;
+
+            foreach ($allAnswers as $answer) {
+                $interactions = Interaction::where('history_answer_id', $answer->id)->get();
+
+                foreach ($interactions as $interaction) {
+                    if ($interaction->interaction) {
+                        $likes++;
+                    } else {
+                        $dislikes++;
+                    }
+                }
+
+            }
+            $mainAnswer->dislikes = $dislikes;
+            $mainAnswer->likes = $likes;
+            $allHistories[] = $mainAnswer;
         }
 
         foreach ($allHistories as $history) {
@@ -225,11 +275,7 @@ class HistoriesController extends Controller
     public function explore(Request $request)
     {
         $user = Auth::user();
-        $user_tags = UserTag::where('user_id', $user->id)->take($request->page)->get();
-
-        if ($request->page > count($user_tags)) {
-            return response()->json(['message' => 'No more histories'], 200);
-        }
+        $user_tags = UserTag::where('user_id', $user->id)->get();
 
         $histories = [];
 
@@ -238,8 +284,28 @@ class HistoriesController extends Controller
 
             foreach ($history as $h) {
                 if (History::find($h->history_id)) {
-                    $histories[] = HistoryAnswers::where('history_id', $h->history_id)->join('histories', 'histories_answers.history_id', '=', 'histories.id')->join('users', 'histories_answers.user_id', '=', 'users.id')->join('images', 'histories_answers.image_id', '=', 'images.id')->select('users.nickname', 'histories_answers.created_at', 'histories_answers.id', "histories.name", 'images.path')->first();
-                    break;
+                    $history = HistoryAnswers::where('history_id', $h->history_id)->join('histories', 'histories_answers.history_id', '=', 'histories.id')->join('users', 'histories_answers.user_id', '=', 'users.id')->join('images', 'histories_answers.image_id', '=', 'images.id')->select('users.nickname', 'histories_answers.created_at', 'histories_answers.id AS answerID', 'histories.id', "histories.name", 'images.path')->first();
+
+                    $likes = 0;
+                    $dislikes = 0;
+                    // all interactions for this answer
+                    $allAnswers = HistoryAnswers::where('history_id', $h->history_id)->get();
+                    foreach ($allAnswers as $answer) {
+                        $interactions = Interaction::where('history_answer_id', $answer->id)->get();
+
+                        foreach ($interactions as $interaction) {
+                            if ($interaction->interaction) {
+                                $likes++;
+                            } else {
+                                $dislikes++;
+                            }
+                        }
+                    }
+
+                    $history->likes = $likes;
+                    $history->dislikes = $dislikes;
+
+                    $histories[] = $history;
                 }
             }
         }
@@ -247,8 +313,14 @@ class HistoriesController extends Controller
         foreach ($histories as $history) {
             $history->time_ago = Carbon::parse($history->created_at)->diffForHumans();
         }
+
+        // if ($request->page > count($histories)) {
+        //     return response()->json(['message' => 'No more histories'], 200);
+        // }
+
         return response()->json([
             'success' => $histories,
+            'tagsuser' => $user_tags,
         ]);
     }
 
@@ -272,7 +344,27 @@ class HistoriesController extends Controller
      */
     public function update(Request $request, History $history)
     {
-        //
+        $history->public = $request->public;
+        $history->save();
+        return ['success' => $history];
+    }
+
+    public function remove(History $history)
+    {
+        $answers = HistoryAnswers::where('history_id', $history->id)->get();
+        foreach ($answers as $answer) {
+            $interactions = Interaction::where('history_answer_id', $answer->id)->get();
+            foreach ($interactions as $interaction) {
+                $interaction->delete();
+            }
+            $answer->delete();
+        }
+        $historiesTags = HistoryTag::where('history_id', $history->id)->get();
+        foreach ($historiesTags as $historyTag) {
+            $historyTag->delete();
+        }
+        $history->delete();
+        return ['success' => $history];
     }
 
     /**
@@ -283,6 +375,12 @@ class HistoriesController extends Controller
      */
     public function destroy(History $history)
     {
-        //
+        $tags = HistoryTag::where('history_id', $history->id)->delete();
+        $answers = HistoryAnswers::where('history_id', $history->id)->get();
+        foreach ($answers as $answer) {
+            $interactions = Interaction::where('history_answer_id', $answer->id)->delete();
+            $answer->delete();
+        }
+        $history->delete();
     }
 }
