@@ -191,7 +191,7 @@ class UserController extends Controller
         if ($request->img) {
             // salvando imagem no storage
             $converted_img = explode('base64', $request->img)[1];
-            $img_name = rand(0, 99999) . $request->nickname . '.jpg';
+            $img_name = rand(0, 99999) . '.jpg';
             Storage::disk('public')->put($img_name, base64_decode($converted_img));
 
             // salvando path da imagem
@@ -224,6 +224,34 @@ class UserController extends Controller
         }
         return response()->json([
             'success' => ['user' => $request->all()],
+        ]);
+    }
+
+    /**
+     * Show some random users.
+     *
+     * @return \Illuminate\Http\Response
+     */
+
+    public function random()
+    {
+        $users = User::where('id', "<>", Auth::user()->id)->get();
+        $random_users = [];
+
+        $i = 0;
+
+        while ($i < 20) {
+            $random_users[] = $users[rand(0, count($users) - 1)];
+            $i++;
+        }
+
+        // search for user images
+        foreach ($random_users as $user) {
+            $user->path = Image::find($user->image_id) ? Image::find($user->image_id)->path : null;
+        }
+
+        return response()->json([
+            'success' => $random_users,
         ]);
     }
 

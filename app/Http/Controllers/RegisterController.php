@@ -97,7 +97,7 @@ class RegisterController extends BaseController
         // salvando imagem no storage, caso haja uma imagem
         if ($values->img) {
             $converted_img = explode('base64', $values->img)[1];
-            $img_name = rand(0, 99999) . $values->nickname . '.jpg';
+            $img_name = rand(0, 99999) . rand(0, 99999) . rand(0, 99999)  . '.jpg';
             Storage::disk('public')->put($img_name, base64_decode($converted_img));
 
             // salvando path da imagem

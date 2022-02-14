@@ -37,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('admin/view/{user}', [UserController::class, 'view']);
         Route::delete('admin/destroy-user/{user}', [UserController::class, 'destroy']);
         Route::delete('admin/delete-history/{history}', [HistoriesController::class, 'destroy']);
+        Route::get('admin/random-users', [UserController::class, 'random']);
     });
 
     Route::get('isLogged', function () {
